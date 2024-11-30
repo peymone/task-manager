@@ -24,7 +24,7 @@ _And of course, everything is done. Go check for yourself_
 <h2>Deploy</h2>
 
 - _Clone this excellent project:_ ```git clone https://github.com/peymone/task-manager.git```
-- _Open you hacker tool (terminal) and install dependencies:_ ```pip install -r requirements.txt```
+- _Open your hacker tool (terminal) and install dependencies:_ ```pip install -r requirements.txt```
 - _Run it, check, close and forget:_ ```python run.py```
 
 P.S. You can change path to save file in 'config.ini'
