@@ -200,7 +200,7 @@ class TaskManager:
 
         return Task(*task_list[id-1].values())
 
-    def status(self, id: int) -> Task | None:
+    def status(self, id: int) -> Task | str:
         """Switch status for task with specific id
 
         Args:
