@@ -1,6 +1,9 @@
 from configparser import ConfigParser
 
+# My modules
 from src.task_manager import TaskManager
+from src.cli import CLI
+from src.prettifier import pf
 
 
 def load_config() -> str:
@@ -18,5 +21,14 @@ def load_config() -> str:
 
 
 if __name__ == '__main__':
+    # Load config from config.ini
     save_file_path = load_config()
+
+    # Create task manager and cli objects
     task_manager = TaskManager(save_file_path)
+    cli = CLI(task_manager)
+
+    # Show banner, commands and start handling user input
+    pf.show_banner()
+    cli.show_commands()
+    cli.command_handler()

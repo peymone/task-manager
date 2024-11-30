@@ -9,12 +9,12 @@ class Task:
     title: str
     description: str
     category: str
-    due_data: str
+    deadline: str
     priority: str
-    status: str = "Не выполнена"
+    status: str = "In progress"
 
     def __str__(self):
-        show_str = f"ID: {self.id}:\ntitle: {self.title}\ndescription: {self.description}\ncategory: {self.category}\ndeadline: {self.due_data}\npriority: {self.priority}\nstatus: {self.status}"
+        show_str = f"ID: {self.id}:\ntitle: {self.title}\ndescription: {self.description}\ncategory: {self.category}\ndeadline: {self.deadline}\npriority: {self.priority}\nstatus: {self.status}"
         return show_str
 
 
@@ -49,9 +49,14 @@ class TaskManager:
             tuple[list[dict], int]: Task objects and last task id
         """
 
+        # After removing all tasks, only brackets remained - clear them
+        if getsize(self.save_file) == 2:
+            file = open(self.save_file, "w")
+            file.close()
+
         # Save file is empty
         if getsize(self.save_file) == 0:
-            return list(), 1
+            return list(), 0
 
         # Save file is not empty
         with open(self.save_file, "r", encoding="utf-8") as file:
@@ -86,18 +91,18 @@ class TaskManager:
 
         return task_list
 
-    def add(self, title: str, description: str, category: str, due_data: str, priority: str) -> Task | None:
+    def add(self, title: str, description: str, category: str, deadline: str, priority: str) -> Task | str:
         """Create new Task and save it to json file
 
         Args:
             title (str): Task's title
             description (str): Task's description
             category (str): Task's category
-            due_data (str): Task's deadline
+            deadline (str): Task's deadline
             priority (str): Task's priority
 
         Returns:
-            Task | None: Task object or None if operation failed
+            Task | str: Task object OR description if operation failed
         """
 
         # Get tasks from save file and last task id
@@ -105,16 +110,16 @@ class TaskManager:
 
         try:
             # Create new task and save it
-            task = Task(last_id + 1, title, description, category, due_data, priority)
+            task = Task(last_id + 1, title, description, category, deadline, priority)
             task_list.append(asdict(task))
             self.__save_tasks(task_list)
 
             return Task
 
         except:
-            return None
+            return "Operation failed during adding new task to save file"
 
-    def remove(self, id: int = None, category: str = None) -> list[Task] | None:
+    def remove(self, id: int = None, category: str = None) -> list[Task] | str:
         """Remove one task by id OR all tasks with specific category
 
         Args:
@@ -122,7 +127,7 @@ class TaskManager:
             category (str, optional): Task's category. Defaults to None.
 
         Returns:
-            list[Task] | None: deleted Task objects
+            list[Task] | str: deleted Task objects OR failure description
         """
 
         # Get tasks from save file and last task id
@@ -133,7 +138,7 @@ class TaskManager:
         if id:
             # Check if id not in task list
             if id not in range(1, len(task_list) + 1):
-                return None
+                return f"No task with ID '{id}'"
 
             # Pop task and create Task object for return
             popped = task_list.pop(id-1)
@@ -147,7 +152,7 @@ class TaskManager:
         if category:
             # Check if category not in task list
             if category not in [task['category'] for task in task_list]:
-                return None
+                return f"No task with category '{category}'"
 
             # Find tasks with provided category
             for id, task in enumerate(task_list[:]):
@@ -163,7 +168,7 @@ class TaskManager:
 
         return removed_tasks
 
-    def change(self, id: int, title: str = None, description: str = None, category: str = None, due_data: str = None, priority: str = None) -> Task | None:
+    def change(self, id: int, title: str = None, description: str = None, category: str = None, deadline: str = None, priority: str = None) -> Task | str:
         """Change task by id with new data. All data is optional.
 
         Args:
@@ -171,11 +176,11 @@ class TaskManager:
             title (str, optional): Task's title. Defaults to None.
             description (str, optional): Task's description. Defaults to None.
             category (str, optional): Task's category. Defaults to None.
-            due_data (str, optional): Task's deadline. Defaults to None.
+            deadline (str, optional): Task's deadline. Defaults to None.
             priority (str, optional): Task's priority. Defaults to None.
 
         Returns:
-            Task | None: Task object OR NONE
+            Task | str: Task object OR failure description
         """
 
         # Get tasks from save file and last task id
@@ -183,7 +188,7 @@ class TaskManager:
 
         # Check if id not in task list
         if id not in range(1, len(task_list) + 1):
-            return None
+            return f"No task with ID '{id}'"
 
         # Replcae old task data with new one
         for key in task_list[id-1].copy():
@@ -202,7 +207,7 @@ class TaskManager:
             id (int): Task's id
 
         Returns:
-            Task | None: Task object OR None
+            Task | str: Task object OR failure description
         """
 
         # Get tasks from save file and last task id
@@ -210,18 +215,18 @@ class TaskManager:
 
         # Check if id not in task list
         if id not in range(1, len(task_list) + 1):
-            return None
+            return f"No task with ID '{id}'"
 
         # Get current status and replace it
         status = task_list[id-1]['status']
-        task_list[id-1]['status'] = "Выполнена" if status == "Не выполнена" else "Не выполнена"
+        task_list[id-1]['status'] = "Done" if status == "In progress" else "In progress"
 
         # Save changes
         self.__save_tasks(task_list)
 
         return Task(*task_list[id-1].values())
 
-    def find(self, id: int = None, title: str = None, category: str = None, priority: str = None, status: str = None) -> list[Task]:
+    def find(self, id: int = None, title: str = None, category: str = None, priority: str = None, status: str = None) -> list[Task] | str:
         """Filter tasks by id, title, category, priority or status 
 
         Args:
@@ -232,13 +237,14 @@ class TaskManager:
             status (str, optional): Task's status. Defaults to None.
 
         Returns:
-            list[Task]: Task objects list
+            list[Task] | str: Task objects list OR 'no task found'
         """
 
         # Get tasks from save file and last task id
         task_list, _ = self.__get_tasks_and_last_id()
         filtered_tasks = list()
 
+        # Filter tasks
         if id:
             filtered_tasks.append(Task(*task_list[id-1].values()))
         if title:
@@ -258,16 +264,23 @@ class TaskManager:
                 if status == task['status']:
                     filtered_tasks.append(Task(*task.values()))
 
-        return filtered_tasks
+        # Check if filtered tasks is empty and return result
+        if len(filtered_tasks) == 0:
+            return "no task found"
+        else:
+            return filtered_tasks
 
-    def show(self) -> list[Task]:
+    def show(self) -> list[Task] | str:
         """Get Task objects list
 
         Returns:
-            list[Task]: Task objects
+            list[Task] | str: Task objects OR result string
         """
 
         # Get tasks from save file and last task id
         task_list, _ = self.__get_tasks_and_last_id()
 
-        return [Task(*task.values()) for task in task_list]
+        if len(task_list) == 0:
+            return "You have no task at the moment - create one! (add)"
+        else:
+            return [Task(*task.values()) for task in task_list]
