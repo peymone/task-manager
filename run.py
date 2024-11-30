@@ -15,7 +15,7 @@ def load_config() -> str:
 
     config = ConfigParser()
     config.read("config.ini")
-    save_file_path = config.get('DEFAULT', 'SAVE_FILE_PATH')
+    save_file_path = config.get('PROD', 'SAVE_FILE_PATH')
 
     return save_file_path
 

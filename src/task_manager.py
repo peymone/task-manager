@@ -114,7 +114,7 @@ class TaskManager:
             task_list.append(asdict(task))
             self.__save_tasks(task_list)
 
-            return Task
+            return task
 
         except:
             return "Operation failed during adding new task to save file"
@@ -155,12 +155,16 @@ class TaskManager:
                 return f"No task with category '{category}'"
 
             # Find tasks with provided category
-            for id, task in enumerate(task_list[:]):
+            id = 0
+            for task in task_list.copy():
                 if task['category'] == category:
 
                     # Pop task and create Task object for return
                     popped = task_list.pop(id)
                     removed_tasks.append(Task(*popped.values()))
+                    id -= 1
+
+                id += 1
 
             # Reorder tasks id and save changes
             task_list = self.__reorder_id(task_list)
